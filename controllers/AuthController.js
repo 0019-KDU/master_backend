@@ -52,52 +52,54 @@ class AuthController {
       const validator = vine.compile(loginSchema);
       const payload = await validator.validate(body);
 
-      //* find user with email
+      //   * Find user with email
       const findUser = await prisma.users.findUnique({
-        where: { email: payload.email },
+        where: {
+          email: payload.email,
+        },
       });
 
       if (findUser) {
         if (!bcrypt.compareSync(payload.password, findUser.password)) {
           return res.status(400).json({
             errors: {
-              password: "Invalid Credentials",
+              email: "Invalid Credentials.",
             },
           });
         }
 
-        //* Issue token to user
+        // * Issue token to user
         const payloadData = {
           id: findUser.id,
           name: findUser.name,
           email: findUser.email,
           profile: findUser.profile,
         };
-
         const token = jwt.sign(payloadData, process.env.JWT_SECRET, {
           expiresIn: "365d",
         });
 
         return res.json({
-          messages: "Logged in",
+          message: "Logged in",
           access_token: `Bearer ${token}`,
         });
       }
 
       return res.status(400).json({
         errors: {
-          email: "No User Found with this email address",
+          email: "No user found with this email.",
         },
       });
     } catch (error) {
-      console.log("The Error is: " + error);
+      console.log("The error is", error);
       if (error instanceof errors.E_VALIDATION_ERROR) {
-        // console.log(error.messages);'
+        // console.log(error.messages);
         return res.status(400).json({ errors: error.messages });
       } else {
-        return res
-          .status(500)
-          .json({ status: 500, message: "Something went wrong.pls try again" });
+        return res.status(500).json({
+          status: 500,
+          message: "Something went wrong.Please try again.",
+        });
       }
     }
   }
