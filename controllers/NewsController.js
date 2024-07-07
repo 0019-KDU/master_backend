@@ -1,3 +1,4 @@
+import { messages } from "@vinejs/vine/defaults";
 import prisma from "../DB/db.config.js";
 import NewsApiTransform from "../transform/newsApiTransform.js";
 import { generateRandomNum, imageValidator } from "../utils/helper.js";
@@ -6,45 +7,59 @@ import vine, { errors } from "@vinejs/vine";
 
 class NewsController {
   static async index(req, res) {
-    const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 1;
+    let page = Number(req.query.page) || 1;
+    let limit = Number(req.query.limit) || 10;
 
-    if (page <= 0) {
-      page = 1;
-    }
+    // Ensure page is at least 1
+    page = page > 0 ? page : 1;
 
-    if (limit <= 0 || limit > 100) {
-      limit = 10;
-    }
+    // Ensure limit is between 1 and 100
+    limit = limit > 0 && limit <= 100 ? limit : 10;
 
     const skip = (page - 1) * limit;
 
-    const news = await prisma.news.findMany({
-      take: limit,
-      skip: skip,
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            profile: true,
+    try {
+      // Fetch paginated news
+      const news = await prisma.news.findMany({
+        take: limit,
+        skip: skip,
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              profile: true,
+            },
           },
         },
-      },
-    });
-    const newsTransform = news?.map((item) => NewsApiTransform.transform(item));
+      });
 
-    const totalNews = await prisma.news.count();
-    const totalPages = Math.ceil(totalNews / limit);
-    return res.json({
-      status: 200,
-      news: newsTransform,
-      metadata: {
-        totalPages,
-        currentPage: page,
-        currentLimit: limit,
-      },
-    });
+      // Transform news data if transformation function is defined
+      const newsTransform =
+        news?.map((item) => NewsApiTransform.transform(item)) || [];
+
+      // Get total count of news items
+      const totalNews = await prisma.news.count();
+      const totalPages = Math.ceil(totalNews / limit);
+
+      // Return the paginated response
+      return res.json({
+        status: 200,
+        news: newsTransform,
+        metadata: {
+          totalPages,
+          currentPage: page,
+          currentLimit: limit,
+        },
+      });
+    } catch (error) {
+      // Handle any errors
+      console.error(error);
+      return res.status(500).json({
+        status: 500,
+        message: "An error occurred while fetching news.",
+      });
+    }
   }
 
   static async store(req, res) {
@@ -118,7 +133,33 @@ class NewsController {
     }
   }
 
-  static async update(req, res) {}
+  static async update(req, res) {
+    try {
+      const { id } = req.params;
+      const news = await prisma.news.findUnique({
+        where: {
+          id: Number(id),
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              profile: true,
+            },
+          },
+        },
+      });
+
+      const transFormNews = news ? NewsApiTransform.transform(news) : null;
+
+      return res.json({ status: 200, news: transFormNews });
+    } catch (error) {
+      return res
+        .status(500)
+        .json({ messages: "Something went wrong,Please try again" });
+    }
+  }
 
   static async show(req, res) {}
 
