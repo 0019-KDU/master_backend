@@ -19,6 +19,6 @@ router.get("/news", NewsController.index);
 router.post("/news", authMiddleware, NewsController.store);
 router.get("/news/:id", NewsController.show);
 router.put("/news/:id", authMiddleware, NewsController.update);
-router.delete("/news/:id", NewsController.destroy);
+router.delete("/news/:id", authMiddleware, NewsController.destroy);
 
 export default router;
