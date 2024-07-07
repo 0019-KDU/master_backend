@@ -133,9 +133,20 @@ class NewsController {
     }
   }
 
-  static async update(req, res) {
+  static async update(req, res) {}
+
+  static async show(req, res) {
     try {
       const { id } = req.params;
+
+      // Validate the ID parameter
+      if (isNaN(id)) {
+        return res
+          .status(400)
+          .json({ status: 400, message: "Invalid news ID" });
+      }
+
+      // Fetch the news item by ID
       const news = await prisma.news.findUnique({
         where: {
           id: Number(id),
@@ -151,17 +162,29 @@ class NewsController {
         },
       });
 
-      const transFormNews = news ? NewsApiTransform.transform(news) : null;
+      // If news item not found, return 404
+      if (!news) {
+        return res
+          .status(404)
+          .json({ status: 404, message: "News item not found" });
+      }
 
+      // Transform the news item if necessary
+      const transFormNews = NewsApiTransform.transform(news);
+
+      // Return the transformed news item
       return res.json({ status: 200, news: transFormNews });
     } catch (error) {
+      // Handle errors and return a 500 status code
+      console.error(error);
       return res
         .status(500)
-        .json({ messages: "Something went wrong,Please try again" });
+        .json({
+          status: 500,
+          message: "Something went wrong, please try again",
+        });
     }
   }
-
-  static async show(req, res) {}
 
   static async destroy(req, res) {}
 }
