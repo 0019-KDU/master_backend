@@ -10,6 +10,7 @@ import {
 import { newsSchema } from "../validation/newsValidation.js";
 import vine, { errors } from "@vinejs/vine";
 import redisCache from "../DB/redis.config.js";
+import logger from "../config/logger.js";
 
 class NewsController {
   static async index(req, res) {
@@ -130,7 +131,7 @@ class NewsController {
         news,
       });
     } catch (error) {
-      console.log("The error is", error);
+      logger.error(error?.message);
       if (error instanceof errors.E_VALIDATION_ERROR) {
         // console.log(error.messages);
         return res.status(400).json({ errors: error.messages });
