@@ -26,4 +26,7 @@ import ApiRoutes from "./routes/api.js";
 
 app.use("/api", ApiRoutes);
 
+//* jobs import
+import "./jobs/index.js";
+
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -6,6 +6,7 @@ import { messages } from "@vinejs/vine/defaults";
 import jwt from "jsonwebtoken";
 import { sendEmail } from "../config/mailer.js";
 import logger from "../config/logger.js";
+import { emailQueue, emailQueueName } from "../jobs/SendEmailJobs.js";
 
 class AuthController {
   static async register(req, res) {
@@ -111,13 +112,36 @@ class AuthController {
     try {
       const { email } = req.query;
 
-      const payload = {
-        toEmail: email,
-        subject: "Hey I am just testing",
-        body: "<h1>Hello..,This is a test email Function.</h1>",
-      };
+      const payloads = [
+        {
+          toEmail: email,
+          subject: "Test Email 1",
+          body: "<h1>Hello, This is test email 1.</h1>",
+        },
+        {
+          toEmail: email,
+          subject: "Test Email 2",
+          body: "<h1>Hello, This is test email 2.</h1>",
+        },
+        {
+          toEmail: email,
+          subject: "Test Email 3",
+          body: "<h1>Hello, This is test email 3.</h1>",
+        },
+        {
+          toEmail: email,
+          subject: "Test Email 4",
+          body: "<h1>Hello, This is test email 4.</h1>",
+        },
+        {
+          toEmail: email,
+          subject: "Test Email 5",
+          body: "<h1>Hello, This is test email 5.</h1>",
+        },
+      ];
 
-      await sendEmail(payload.toEmail, payload.subject, payload.body);
+      await emailQueue.add(emailQueueName, payload);
+      // await sendEmail(payload.toEmail, payload.subject, payload.body);
 
       return res.json({ status: 200, messages: "Email sent successfully!" });
     } catch (error) {
