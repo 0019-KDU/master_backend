@@ -9,6 +9,7 @@ import {
 } from "../utils/helper.js";
 import { newsSchema } from "../validation/newsValidation.js";
 import vine, { errors } from "@vinejs/vine";
+import redisCache from "../DB/redis.config.js";
 
 class NewsController {
   static async index(req, res) {
@@ -117,6 +118,10 @@ class NewsController {
 
       const news = await prisma.news.create({
         data: payload,
+      });
+
+      redisCache.del("/api/news", (err) => {
+        if (err) throw err;
       });
 
       return res.json({
