@@ -4,6 +4,8 @@ import { registerSchema, loginSchema } from "../validation/authValidation.js";
 import bcrypt from "bcryptjs";
 import { messages } from "@vinejs/vine/defaults";
 import jwt from "jsonwebtoken";
+import { sendEmail } from "../config/mailer.js";
+import logger from "../config/logger.js";
 
 class AuthController {
   static async register(req, res) {
@@ -101,6 +103,28 @@ class AuthController {
           message: "Something went wrong.Please try again.",
         });
       }
+    }
+  }
+
+  // * Send  Test Email
+  static async sendTestEmail(req, res) {
+    try {
+      const { email } = req.query;
+
+      const payload = {
+        toEmail: email,
+        subject: "Hey I am just testing",
+        body: "<h1>Hello..,This is a test email Function.</h1>",
+      };
+
+      await sendEmail(payload.toEmail, payload.subject, payload.body);
+
+      return res.json({ status: 200, messages: "Email sent successfully!" });
+    } catch (error) {
+      logger.error({ type: "Email Error", body: error });
+      return res
+        .status(500)
+        .json({ messages: "Something went wrong. Please try again later" });
     }
   }
 }

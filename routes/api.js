@@ -10,6 +10,7 @@ const router = Router();
 //* Authentication routes
 router.post("/auth/register", AuthController.register);
 router.post("/auth/login", AuthController.login);
+router.get("/send-email", AuthController.sendTestEmail);
 
 //* profile routes
 router.get("/profile", authMiddleware, ProfileController.index); //private route
